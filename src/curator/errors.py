@@ -1,0 +1,2 @@
+class CuratorConfigError(ValueError):
+    pass

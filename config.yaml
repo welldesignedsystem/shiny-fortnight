@@ -1,0 +1,7 @@
+curator-source-repo: "https://github.com/welldesignedsystem/literate-dollop"
+curator-clone-dir: "/tmp/curator/source-repo"
+curator-include-files:
+  - "*"
+curator-exclude-files:
+  - ".git/*"
+  - ".github/chatmodes/*"

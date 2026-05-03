@@ -1,0 +1,5 @@
+DEFAULT_CONFIG_PATH = "config.yaml"
+DEFAULT_CLONE_DIR = "/tmp/curator/source-repo"
+DEFAULT_EXCLUDED_DIRECTORIES = {".git"}
+DEFAULT_INCLUDE_FILES = {"*"}
+DEFAULT_EXCLUDE_FILES = {".git/*"}
