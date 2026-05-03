@@ -1,3 +1,5 @@
+from pathlib import Path
+from shutil import copy2
 from typing import Any
 
 from fastmcp import FastMCP
@@ -13,7 +15,7 @@ from .config import (
     read_config,
 )
 from .constants import DEFAULT_CONFIG_PATH, DEFAULT_CLONE_DIR
-from .dto import ListRequest
+from .dto import ListFile, ListRequest, TransferRequest
 from .errors import CuratorConfigError
 from .file_manifest import build_file_manifest, validate_requested_files
 from .filters import ensure_source_path
@@ -28,6 +30,46 @@ def serialize_config_values(values: set[str] | None) -> list[str] | None:
         return None
 
     return sorted(values)
+
+
+def get_list_context(config_path: str) -> dict[str, Any]:
+    config = read_config(config_path)
+    clone_dir = get_clone_dir(config)
+    include_extensions = get_include_extensions(config)
+    ignore_extensions = get_ignore_extensions(config)
+    exclude_directories = get_exclude_directories(config)
+    include_files = get_include_files(config)
+    exclude_files = get_exclude_files(config)
+    ensure_source_path(clone_dir)
+
+    return {
+        "clone_dir": clone_dir,
+        "include_extensions": include_extensions,
+        "ignore_extensions": ignore_extensions,
+        "exclude_directories": exclude_directories,
+        "include_files": include_files,
+        "exclude_files": exclude_files,
+    }
+
+
+def build_list_metadata(
+    request_metadata: dict[str, Any],
+    clone_dir: Path,
+    include_extensions: set[str] | None,
+    ignore_extensions: set[str] | None,
+    exclude_directories: set[str] | None,
+    include_files: set[str] | None,
+    exclude_files: set[str] | None,
+) -> dict[str, Any]:
+    return {
+        "clone_dir": str(clone_dir),
+        "curator-include-files": serialize_config_values(include_files),
+        "curator-exclude-files": serialize_config_values(exclude_files),
+        "curator-include-extensions": serialize_config_values(include_extensions),
+        "curator-ignore-extensions": serialize_config_values(ignore_extensions),
+        "curator-exclude-directories": serialize_config_values(exclude_directories),
+        **request_metadata,
+    }
 
 
 @mcp.tool(name="init")
@@ -50,27 +92,26 @@ def list_files(
     config_path: str = DEFAULT_CONFIG_PATH,
 ) -> dict[str, Any]:
     """Return a manifest of files available in the configured Curator clone."""
-    config = read_config(config_path)
-    clone_dir = get_clone_dir(config)
-    include_extensions = get_include_extensions(config)
-    ignore_extensions = get_ignore_extensions(config)
-    exclude_directories = get_exclude_directories(config)
-    include_files = get_include_files(config)
-    exclude_files = get_exclude_files(config)
-    ensure_source_path(clone_dir)
+    context = get_list_context(config_path)
+    clone_dir = context["clone_dir"]
+    include_extensions = context["include_extensions"]
+    ignore_extensions = context["ignore_extensions"]
+    exclude_directories = context["exclude_directories"]
+    include_files = context["include_files"]
+    exclude_files = context["exclude_files"]
 
     if request is None:
         request = ListRequest()
 
-    metadata = {
-        "clone_dir": str(clone_dir),
-        "curator-include-files": serialize_config_values(include_files),
-        "curator-exclude-files": serialize_config_values(exclude_files),
-        "curator-include-extensions": serialize_config_values(include_extensions),
-        "curator-ignore-extensions": serialize_config_values(ignore_extensions),
-        "curator-exclude-directories": serialize_config_values(exclude_directories),
-        **request.metadata,
-    }
+    metadata = build_list_metadata(
+        request.metadata,
+        clone_dir,
+        include_extensions,
+        ignore_extensions,
+        exclude_directories,
+        include_files,
+        exclude_files,
+    )
 
     if not request.files:
         return build_file_manifest(
@@ -93,6 +134,85 @@ def list_files(
         exclude_files,
     )
     return ListRequest(metadata=metadata, files=validated_files).model_dump()
+
+
+@mcp.tool(name="transfer")
+def transfer_files(
+    request: TransferRequest,
+    config_path: str = DEFAULT_CONFIG_PATH,
+) -> dict[str, Any]:
+    """Copy listed Curator files to a destination folder."""
+    context = get_list_context(config_path)
+    clone_dir = context["clone_dir"]
+    include_extensions = context["include_extensions"]
+    ignore_extensions = context["ignore_extensions"]
+    exclude_directories = context["exclude_directories"]
+    include_files = context["include_files"]
+    exclude_files = context["exclude_files"]
+
+    manifest = build_file_manifest(
+        clone_dir,
+        include_extensions,
+        ignore_extensions,
+        exclude_directories,
+        include_files,
+        exclude_files,
+    )
+    allowed_files = {list_file.file for list_file in manifest.files}
+
+    requested_files = ListRequest(
+        files=[ListFile(file=transfer_file.file) for transfer_file in request.files]
+    )
+    validated_files = validate_requested_files(
+        clone_dir,
+        requested_files,
+        include_extensions,
+        ignore_extensions,
+        exclude_directories,
+        include_files,
+        exclude_files,
+    )
+
+    destination_folder = Path(request.destination_folder).expanduser().resolve()
+    transferred_files = []
+    for transfer_file, validated_file in zip(request.files, validated_files):
+        source_path = Path(validated_file.file)
+        if validated_file.file not in allowed_files:
+            raise CuratorConfigError(
+                f"Transfer file is not present in list output: {transfer_file.file}"
+            )
+
+        destination_path = (
+            Path(transfer_file.destination).expanduser().resolve()
+            if transfer_file.destination
+            else destination_folder / source_path.name
+        )
+        if destination_path.exists() and destination_path.is_dir():
+            destination_path = destination_path / source_path.name
+
+        destination_path.parent.mkdir(parents=True, exist_ok=True)
+        copy2(source_path, destination_path)
+        transferred_files.append(
+            {
+                "file": source_path.as_posix(),
+                "destination": destination_path.as_posix(),
+            }
+        )
+
+    return {
+        "metadata": build_list_metadata(
+            {
+                "destination_folder": destination_folder.as_posix(),
+            },
+            clone_dir,
+            include_extensions,
+            ignore_extensions,
+            exclude_directories,
+            include_files,
+            exclude_files,
+        ),
+        "files": transferred_files,
+    }
 
 
 if __name__ == "__main__":

@@ -4,11 +4,19 @@ from pydantic import BaseModel, Field
 
 
 class ListFile(BaseModel):
-    path: str
-    absolute_path: str = ""
-    extension: str = ""
+    file: str
 
 
 class ListRequest(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
     files: list[ListFile] = Field(default_factory=list)
+
+
+class TransferFile(BaseModel):
+    file: str
+    destination: str | None = None
+
+
+class TransferRequest(BaseModel):
+    destination_folder: str
+    files: list[TransferFile] = Field(default_factory=list)

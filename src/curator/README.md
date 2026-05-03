@@ -85,10 +85,7 @@ Input shape:
   "metadata": {},
   "files": [
     {
-      "index": 0,
-      "path": "skills/python/example.md",
-      "filename": "example.md",
-      "extension": ".md"
+      "file": "/tmp/curator/source-repo/skills/python/example.md"
     }
   ]
 }
@@ -109,17 +106,57 @@ regular files:
   },
   "files": [
     {
-      "index": 0,
-      "path": "skills/python/example.md",
-      "filename": "example.md",
-      "extension": ".md"
+      "file": "/tmp/curator/source-repo/skills/python/example.md"
     }
   ]
 }
 ```
 
-Requested paths are resolved under the configured clone directory. Paths that
+Requested absolute paths are resolved under the configured clone directory. Paths that
 escape that directory, symlinks, and non-file paths are rejected.
+
+### `transfer`
+
+Copies requested files from the configured Curator clone to a destination folder.
+Requested files must also appear in the `list` output after filters are applied.
+
+Input shape:
+
+```json
+{
+  "destination_folder": "/tmp/curator/transfer",
+  "files": [
+    {
+      "file": "/tmp/curator/source-repo/skills/python/example.md"
+    },
+    {
+      "file": "/tmp/curator/source-repo/README.md",
+      "destination": "/tmp/curator/transfer/docs/README.md"
+    }
+  ]
+}
+```
+
+If a file does not specify `destination`, Curator copies it into
+`destination_folder` with the original filename. If `destination` is set, Curator
+uses that path for that file.
+
+Output shape:
+
+```json
+{
+  "metadata": {
+    "clone_dir": "/tmp/curator/source-repo",
+    "destination_folder": "/tmp/curator/transfer"
+  },
+  "files": [
+    {
+      "file": "/tmp/curator/source-repo/skills/python/example.md",
+      "destination": "/tmp/curator/transfer/example.md"
+    }
+  ]
+}
+```
 
 ## Run
 

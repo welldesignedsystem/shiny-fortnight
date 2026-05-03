@@ -37,13 +37,8 @@ def build_file_manifest(
     ]
 
     files = [
-        ListFile(
-            index=index,
-            path=file_path.relative_to(root).as_posix(),
-            filename=file_path.name,
-            extension=file_path.suffix,
-        )
-        for index, file_path in enumerate(file_paths)
+        ListFile(file=file_path.resolve().as_posix())
+        for file_path in file_paths
     ]
 
     return ListRequest(metadata=metadata or {}, files=files)
@@ -59,24 +54,24 @@ def validate_requested_files(
     exclude_files: set[str] | None = None,
 ) -> list[ListFile]:
     validated_files: list[ListFile] = []
-    for index, list_file in enumerate(request.files):
-        requested_path = Path(list_file.path)
-        candidate_path = (root / requested_path).resolve()
+    for list_file in request.files:
+        requested_path = Path(list_file.file)
+        candidate_path = requested_path.resolve()
         try:
             relative_path = candidate_path.relative_to(root)
         except ValueError as exc:
             raise CuratorConfigError(
-                f"List path escapes clone directory: {list_file.path}"
+                f"List path escapes clone directory: {list_file.file}"
             ) from exc
 
         if path_contains_symlink(root, relative_path):
             raise CuratorConfigError(
-                f"List path includes a symlink: {list_file.path}"
+                f"List path includes a symlink: {list_file.file}"
             )
 
         if not candidate_path.is_file():
             raise CuratorConfigError(
-                f"List path is not a regular file: {list_file.path}"
+                f"List path is not a regular file: {list_file.file}"
             )
 
         if not is_included_extension(
@@ -85,26 +80,21 @@ def validate_requested_files(
             ignore_extensions,
         ):
             raise CuratorConfigError(
-                f"List path extension is not allowed: {list_file.path}"
+                f"List path extension is not allowed: {list_file.file}"
             )
 
         if is_excluded_path(candidate_path, root, exclude_directories):
             raise CuratorConfigError(
-                f"List path is inside an excluded directory: {list_file.path}"
+                f"List path is inside an excluded directory: {list_file.file}"
             )
 
         if not is_included_file(candidate_path, root, include_files, exclude_files):
             raise CuratorConfigError(
-                f"List path is not allowed by file patterns: {list_file.path}"
+                f"List path is not allowed by file patterns: {list_file.file}"
             )
 
         validated_files.append(
-            ListFile(
-                index=list_file.index if list_file.index is not None else index,
-                path=relative_path.as_posix(),
-                filename=list_file.filename or candidate_path.name,
-                extension=list_file.extension or candidate_path.suffix,
-            )
+            ListFile(file=candidate_path.as_posix())
         )
 
     return validated_files
