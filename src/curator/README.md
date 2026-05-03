@@ -115,6 +115,37 @@ regular files:
 Requested absolute paths are resolved under the configured clone directory. Paths that
 escape that directory, symlinks, and non-file paths are rejected.
 
+### `read`
+
+Reads one UTF-8 text file from the configured Curator clone. The requested file
+must be allowed by the same include, exclude, extension, directory, and symlink
+rules used by `list`.
+
+Input shape:
+
+```json
+{
+  "file": "/tmp/curator/source-repo/skills/python/example.md"
+}
+```
+
+Output shape:
+
+```json
+{
+  "metadata": {
+    "clone_dir": "/tmp/curator/source-repo",
+    "curator-include-files": ["*"],
+    "curator-exclude-files": [".git/*"],
+    "curator-include-extensions": null,
+    "curator-ignore-extensions": null,
+    "curator-exclude-directories": [".git"]
+  },
+  "file": "/tmp/curator/source-repo/skills/python/example.md",
+  "content": "# Example\n"
+}
+```
+
 ### `transfer`
 
 Copies requested files from the configured Curator clone to a destination folder.

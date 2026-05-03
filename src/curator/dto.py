@@ -12,6 +12,10 @@ class ListRequest(BaseModel):
     files: list[ListFile] = Field(default_factory=list)
 
 
+class ReadFileRequest(BaseModel):
+    file: str
+
+
 class TransferFile(BaseModel):
     file: str
     destination: str | None = None

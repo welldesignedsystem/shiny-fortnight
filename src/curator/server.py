@@ -15,7 +15,7 @@ from .config import (
     read_config,
 )
 from .constants import DEFAULT_CONFIG_PATH, DEFAULT_CLONE_DIR
-from .dto import ListFile, ListRequest, TransferRequest
+from .dto import ListFile, ListRequest, ReadFileRequest, TransferRequest
 from .errors import CuratorConfigError
 from .file_manifest import build_file_manifest, validate_requested_files
 from .filters import ensure_source_path
@@ -136,12 +136,61 @@ def list_files(
     return ListRequest(metadata=metadata, files=validated_files).model_dump()
 
 
+@mcp.tool(name="read")
+def read_file(
+    request: ReadFileRequest,
+    config_path: str = DEFAULT_CONFIG_PATH,
+) -> dict[str, Any]:
+    """Read a Curator file if it is included by config and not excluded."""
+    context = get_list_context(config_path)
+    clone_dir = context["clone_dir"]
+    include_extensions = context["include_extensions"]
+    ignore_extensions = context["ignore_extensions"]
+    exclude_directories = context["exclude_directories"]
+    include_files = context["include_files"]
+    exclude_files = context["exclude_files"]
+
+    validated_files = validate_requested_files(
+        clone_dir,
+        ListRequest(files=[ListFile(file=request.file)]),
+        include_extensions,
+        ignore_extensions,
+        exclude_directories,
+        include_files,
+        exclude_files,
+    )
+    source_path = Path(validated_files[0].file)
+
+    try:
+        content = source_path.read_text(encoding="utf-8")
+    except UnicodeDecodeError as exc:
+        raise CuratorConfigError(
+            f"Read file is not UTF-8 text: {request.file}"
+        ) from exc
+
+    return {
+        "metadata": build_list_metadata(
+            {},
+            clone_dir,
+            include_extensions,
+            ignore_extensions,
+            exclude_directories,
+            include_files,
+            exclude_files,
+        ),
+        "file": source_path.as_posix(),
+        "content": content,
+    }
+
+
 @mcp.tool(name="transfer")
 def transfer_files(
     request: TransferRequest,
     config_path: str = DEFAULT_CONFIG_PATH,
 ) -> dict[str, Any]:
-    """Copy listed Curator files to a destination folder."""
+    """Copy listed Curator files to a destination folder.
+    To be able to transfer, files must be included in the list output.
+    The files need to be listed using the list end point for then included in the transfer request."""
     context = get_list_context(config_path)
     clone_dir = context["clone_dir"]
     include_extensions = context["include_extensions"]
