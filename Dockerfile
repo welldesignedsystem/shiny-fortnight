@@ -1,6 +1,7 @@
 FROM python:3.14-slim
 
 WORKDIR /app
+ENV PYTHONPATH=/app/src
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends git \
@@ -8,8 +9,12 @@ RUN apt-get update \
 
 RUN pip install --no-cache-dir "fastmcp>=3.2.4" "pyyaml>=6.0.0"
 
-COPY src/curator-tools /app/curator-tools
+RUN mkdir -p /mnt/curator-host
 
-WORKDIR /app/curator-tools
+COPY src /app/src
+COPY config.yaml /app/config.yaml
 
-CMD ["python", "server.py"]
+VOLUME ["/mnt/curator-host"]
+EXPOSE 8000
+
+CMD ["python", "-m", "curator.server"]

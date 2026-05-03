@@ -181,5 +181,12 @@ fastmcp run curator.server:mcp
 Build the Docker image from the repository root:
 
 ```bash
-docker build -f src/curator/Dockerfile .
+docker build -t curator .
+docker run --rm \
+  --mount type=bind,source=/home/ai/Desktop/testing,target=/mnt/curator-host/testing \
+  -p 8000:8000 \
+  curator
 ```
+
+Use paths under `/mnt/curator-host/testing` for transfer destinations inside the
+container. Docker only exposes the host folders you bind mount.
