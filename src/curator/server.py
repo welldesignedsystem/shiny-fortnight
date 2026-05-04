@@ -1,6 +1,8 @@
+import logging
+from functools import wraps
 from pathlib import Path
 from shutil import copy2
-from typing import Any
+from typing import Any, Callable
 
 from fastmcp import FastMCP
 
@@ -23,6 +25,25 @@ from .git_tools import clone_repo
 
 
 mcp = FastMCP("curator")
+logger = logging.getLogger(__name__)
+
+
+def log_tool_errors(
+    tool_name: str,
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        @wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            try:
+                return func(*args, **kwargs)
+            except CuratorConfigError as exc:
+                logger.warning("Curator tool '%s' failed: %s", tool_name, exc)
+            except Exception:
+                logger.exception("Curator tool '%s' failed unexpectedly", tool_name)
+
+        return wrapper
+
+    return decorator
 
 
 def serialize_config_values(values: set[str] | None) -> list[str] | None:
@@ -73,6 +94,7 @@ def build_list_metadata(
 
 
 @mcp.tool(name="init")
+@log_tool_errors("init")
 def init(config_path: str = DEFAULT_CONFIG_PATH) -> dict[str, Any]:
     """Read config.yaml and clone the configured Curator source repository."""
     config = read_config(config_path)
@@ -87,6 +109,7 @@ def init(config_path: str = DEFAULT_CONFIG_PATH) -> dict[str, Any]:
 
 
 @mcp.tool(name="list")
+@log_tool_errors("list")
 def list_files(
     request: ListRequest | None = None,
     config_path: str = DEFAULT_CONFIG_PATH,
@@ -137,6 +160,7 @@ def list_files(
 
 
 @mcp.tool(name="read")
+@log_tool_errors("read")
 def read_file(
     request: ReadFileRequest,
     config_path: str = DEFAULT_CONFIG_PATH,
@@ -184,6 +208,7 @@ def read_file(
 
 
 @mcp.tool(name="transfer")
+@log_tool_errors("transfer")
 def transfer_files(
     request: TransferRequest,
     config_path: str = DEFAULT_CONFIG_PATH,
@@ -265,4 +290,5 @@ def transfer_files(
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     mcp.run(transport="http")
