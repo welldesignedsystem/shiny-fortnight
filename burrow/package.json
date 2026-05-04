@@ -1,0 +1,135 @@
+{
+  "name": "curator-copilot-tools",
+  "displayName": "Curator Copilot Tools",
+  "description": "Exposes Curator MCP tools to GitHub Copilot agent",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": ["AI"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Curator",
+      "properties": {
+        "curator.serverUrl": {
+          "type": "string",
+          "default": "http://localhost:8000",
+          "description": "URL of the running Curator MCP HTTP server"
+        },
+        "curator.configPath": {
+          "type": "string",
+          "default": "config.yaml",
+          "description": "Path to curator config.yaml passed to each tool"
+        }
+      }
+    },
+    "languageModelTools": [
+      {
+        "name": "curator_init",
+        "tags": ["curator", "git", "clone"],
+        "displayName": "Curator: Init",
+        "modelDescription": "Read config.yaml and clone the configured Curator source repository. Call this first before using list, read, or transfer.",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(repo-clone)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "config_path": {
+              "type": "string",
+              "description": "Optional path to config.yaml. Defaults to the extension setting."
+            }
+          }
+        }
+      },
+      {
+        "name": "curator_list",
+        "tags": ["curator", "files", "manifest"],
+        "displayName": "Curator: List Files",
+        "modelDescription": "Return a manifest of files available in the configured Curator clone directory, filtered by include/exclude rules in config.",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(list-tree)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "files": {
+              "type": "array",
+              "description": "Optional list of specific files to validate. If omitted, returns the full manifest.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "file": { "type": "string", "description": "File path to include" }
+                },
+                "required": ["file"]
+              }
+            },
+            "metadata": {
+              "type": "object",
+              "description": "Optional key-value metadata to include in the response.",
+              "additionalProperties": { "type": "string" }
+            }
+          }
+        }
+      },
+      {
+        "name": "curator_read",
+        "tags": ["curator", "files", "read"],
+        "displayName": "Curator: Read File",
+        "modelDescription": "Read the UTF-8 text content of a single Curator file. The file must pass the include/exclude config rules.",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(file-text)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "file": {
+              "type": "string",
+              "description": "Path of the file to read (must be in the curator clone directory)"
+            }
+          },
+          "required": ["file"]
+        }
+      },
+      {
+        "name": "curator_transfer",
+        "tags": ["curator", "files", "copy"],
+        "displayName": "Curator: Transfer Files",
+        "modelDescription": "Copy listed Curator files to a destination folder. Files must appear in the list output first.",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(copy)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "destination_folder": {
+              "type": "string",
+              "description": "Default destination folder for copied files"
+            },
+            "files": {
+              "type": "array",
+              "description": "Files to transfer. Each entry needs a source file path and an optional per-file destination.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "file": { "type": "string", "description": "Source file path" },
+                  "destination": { "type": "string", "description": "Optional destination path override for this file" }
+                },
+                "required": ["file"]
+              }
+            }
+          },
+          "required": ["destination_folder", "files"]
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.4.0"
+  }
+}

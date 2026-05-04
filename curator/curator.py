@@ -1,6 +1,6 @@
 """Launcher for the Curator FastMCP server."""
 
-from src.curator.server import mcp
+from src.server import mcp
 
 
 if __name__ == "__main__":

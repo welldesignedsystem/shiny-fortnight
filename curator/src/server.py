@@ -24,7 +24,7 @@ from .filters import ensure_source_path
 from .git_tools import clone_repo
 
 
-mcp = FastMCP("curator")
+mcp = FastMCP("Curator")
 logger = logging.getLogger(__name__)
 
 
