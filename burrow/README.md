@@ -66,7 +66,7 @@ npm install
 npm run compile
 npx @vscode/vsce package
 rm ../curator/extension/*.vsix
-mv curator-copilot-tools*.vsix ../curator/extension
+mv *.vsix ../curator/extension
 # Press F5 in VS Code to launch Extension Development Host
 ```
 

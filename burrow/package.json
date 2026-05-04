@@ -1,8 +1,10 @@
 {
-  "name": "curator-copilot-tools",
-  "displayName": "Curator Copilot Tools",
+  "name": "burrow",
+  "displayName": "Burrow - Curator Tunnel for Copilot",
   "description": "Exposes Curator MCP tools to GitHub Copilot agent",
-  "version": "0.0.1",
+  "version": "0.0.2",
+  "publisher": "WellDesignedSystem",
+  "icon": "images/icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/welldesignedsystem/shiny-fortnight.git"
@@ -37,7 +39,7 @@
         "displayName": "Curator: Init",
         "modelDescription": "Read config.yaml and clone the configured Curator source repository. Call this first before using list, read, or transfer.",
         "canBeReferencedInPrompt": true,
-        "icon": "images/icon.png",
+        "toolReferenceName": "curatorInit",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -54,6 +56,7 @@
         "displayName": "Curator: List Files",
         "modelDescription": "Return a manifest of files available in the configured Curator clone directory, filtered by include/exclude rules in config.",
         "canBeReferencedInPrompt": true,
+        "toolReferenceName": "curatorList",
         "icon": "$(list-tree)",
         "inputSchema": {
           "type": "object",
@@ -83,6 +86,7 @@
         "displayName": "Curator: Read File",
         "modelDescription": "Read the UTF-8 text content of a single Curator file. The file must pass the include/exclude config rules.",
         "canBeReferencedInPrompt": true,
+        "toolReferenceName": "curatorRead",
         "icon": "$(file-text)",
         "inputSchema": {
           "type": "object",
@@ -101,6 +105,7 @@
         "displayName": "Curator: Transfer Files",
         "modelDescription": "Copy listed Curator files to a destination folder. Files must appear in the list output first.",
         "canBeReferencedInPrompt": true,
+        "toolReferenceName": "curatorTransfer",
         "icon": "$(copy)",
         "inputSchema": {
           "type": "object",
