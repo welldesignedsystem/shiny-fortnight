@@ -3,6 +3,11 @@
   "displayName": "Curator Copilot Tools",
   "description": "Exposes Curator MCP tools to GitHub Copilot agent",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/welldesignedsystem/shiny-fortnight.git"
+  },
+  "license": "MIT",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -32,7 +37,7 @@
         "displayName": "Curator: Init",
         "modelDescription": "Read config.yaml and clone the configured Curator source repository. Call this first before using list, read, or transfer.",
         "canBeReferencedInPrompt": true,
-        "icon": "$(repo-clone)",
+        "icon": "images/icon.png",
         "inputSchema": {
           "type": "object",
           "properties": {
