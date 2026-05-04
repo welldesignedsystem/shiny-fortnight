@@ -2,8 +2,15 @@ import * as vscode from "vscode";
 
 function getConfig() {
   const cfg = vscode.workspace.getConfiguration("curator");
+  const rawUrl = process.env.CURATOR_SERVER_URL || process.env.CURATOR_HOST || cfg.get<string>("serverUrl");
+  let serverUrl = rawUrl ? rawUrl.trim().replace(/\/$/, "") : "http://127.0.0.1:8000/mcp";
+
+  if (!/\/mcp$/.test(serverUrl)) {
+    serverUrl = `${serverUrl}/mcp`;
+  }
+
   return {
-    serverUrl: (cfg.get<string>("serverUrl") ?? "http://localhost:8000").replace(/\/$/, ""),
+    serverUrl,
     configPath: cfg.get<string>("configPath") ?? "config.yaml",
   };
 }

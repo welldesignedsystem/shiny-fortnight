@@ -31,9 +31,16 @@ A VS Code extension that exposes your [Curator MCP](https://github.com/your-org/
    ```json
    // .vscode/settings.json
    {
-     "curator.serverUrl": "http://localhost:8000",
+     "curator.serverUrl": "http://127.0.0.1:8000/mcp",
      "curator.configPath": "config.yaml"
    }
+   ```
+
+   You can also set the URL via environment variables:
+   ```bash
+   export CURATOR_SERVER_URL="http://127.0.0.1:8000/mcp"
+   # or just the host and let the extension append /mcp:
+   export CURATOR_HOST="http://127.0.0.1:8000"
    ```
 
 4. Open Copilot Chat, switch to **Agent** mode, and the four Curator tools will be available automatically.

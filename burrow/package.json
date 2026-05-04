@@ -2,7 +2,7 @@
   "name": "burrow",
   "displayName": "Burrow - Curator Tunnel for Copilot",
   "description": "Exposes Curator MCP tools to GitHub Copilot agent",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "WellDesignedSystem",
   "icon": "images/icon.png",
   "repository": {
@@ -22,8 +22,8 @@
       "properties": {
         "curator.serverUrl": {
           "type": "string",
-          "default": "http://localhost:8000",
-          "description": "URL of the running Curator MCP HTTP server"
+          "default": "http://127.0.0.1:8000/mcp",
+          "description": "URL of the running Curator MCP HTTP server (including /mcp)"
         },
         "curator.configPath": {
           "type": "string",

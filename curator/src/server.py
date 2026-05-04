@@ -38,9 +38,10 @@ def log_tool_errors(
                 return func(*args, **kwargs)
             except CuratorConfigError as exc:
                 logger.warning("Curator tool '%s' failed: %s", tool_name, exc)
+                raise
             except Exception:
                 logger.exception("Curator tool '%s' failed unexpectedly", tool_name)
-
+                raise
         return wrapper
 
     return decorator
