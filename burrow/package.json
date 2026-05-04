@@ -2,7 +2,7 @@
   "name": "burrow",
   "displayName": "Burrow - Curator Tunnel for Copilot",
   "description": "Exposes Curator MCP tools to GitHub Copilot agent",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "WellDesignedSystem",
   "icon": "images/icon.png",
   "repository": {

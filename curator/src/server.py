@@ -41,7 +41,7 @@ def log_tool_errors(
                 raise
             except Exception:
                 logger.exception("Curator tool '%s' failed unexpectedly", tool_name)
-                raise
+                raise 
         return wrapper
 
     return decorator
